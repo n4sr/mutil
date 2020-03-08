@@ -39,7 +39,6 @@ def main():
     parser.add_argument('--version',
         action='store_true',
         help='print version and exit',)
-    # TODO add `--remove-cover` option
 
     logparser = parser.add_mutually_exclusive_group()
     logparser.add_argument('-v',

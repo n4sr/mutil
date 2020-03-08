@@ -13,6 +13,7 @@ from .version import __version__
 
 def main():
     log.basicConfig(format='%(levelname)s: %(message)s')
+
     parser = argparse.ArgumentParser(prog='mutil')
     parser.add_argument('files',
         metavar='file',
@@ -48,7 +49,7 @@ def main():
         const='INFO',
         dest='loglevel',
         help='explain what is being done',)
-    logparser.add_argument('-q'
+    logparser.add_argument('-q',
         action='store_const',
         const='ERROR',
         dest='loglevel',
@@ -85,7 +86,8 @@ def usage_exit(parser):
 
 
 def clean_str(s, repl_chr, trunc=None):
-    '''Replaces bad characters for better filename formatting.'''
+    '''Removes non-alphanumeric characters from string and replaces \
+       special characters with their most common substitution.'''
     # substitute char with d[char]
     exclude = r'[^a-zA-Z0-9]+'
     d = {
@@ -166,7 +168,7 @@ class Song:
         subprocess.run(cmd)
 
     def remove_cover(self):
-        '''Removes embeded cover art using ffmpeg. Renames the\
+        '''Removes embeded cover art using `ffmpeg`. Renames the\
            original file and appends `.old` to it. Does not\
            re-encode.'''
         path = self.path

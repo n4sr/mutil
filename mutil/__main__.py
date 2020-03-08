@@ -15,57 +15,72 @@ def main():
     log.basicConfig(format='%(levelname)s: %(message)s')
 
     parser = argparse.ArgumentParser(prog='mutil')
-    parser.add_argument('files',
+    parser.add_argument(
+        'files',
         metavar='file',
         nargs='*',
         type=pathlib.Path,
-        )
-    parser.add_argument('-r',
+    )
+    parser.add_argument(
+        '-r',
         action='store_true',
         dest='rename',
-        help='renames music',)
-    parser.add_argument('-s',
+        help='renames music',
+    )
+    parser.add_argument(
+        '-s',
         dest='sort',
         help='sorts music into folders within a directory',
         metavar='directory',
         nargs=1,
-        type=pathlib.Path,)
-    parser.add_argument('--remove-cover',
+        type=pathlib.Path,
+    )
+    parser.add_argument(
+        '--remove-cover',
         action='store_true',
-        help='removes cover art without re-encoding',)
-    parser.add_argument('-t',
+        help='removes cover art without re-encoding'
+    )
+    parser.add_argument(
+        '-t',
         choices=['opus', 'mp3'],
         dest='transcode',
         help='transcode files using ffmpeg into specified format',
         nargs=1,
-        type=str,)
-    parser.add_argument('--version',
+        type=str,
+    )
+    parser.add_argument(
+        '--version',
         action='store_true',
-        help='print version and exit',)
+        help='print version and exit',
+    )
 
     logparser = parser.add_mutually_exclusive_group()
-    logparser.add_argument('-v',
+    logparser.add_argument(
+        '-v',
         action='store_const',
         const='INFO',
         dest='loglevel',
-        help='explain what is being done',)
-    logparser.add_argument('-q',
+        help='explain what is being done',
+    )
+    logparser.add_argument(
+        '-q',
         action='store_const',
         const='ERROR',
         dest='loglevel',
-        help='suppress warnings',)
+        help='suppress warnings',
+    )
 
     args = parser.parse_args()
+    required = (args.rename,args.sort,args.transcode,args.remove_cover)
 
     if args.loglevel:
         log.getLogger().setLevel(args.loglevel)
     if args.version:
         print(__version__)
         exit()
-    if len(args.files) < 1:
-        usage_exit(parser)
-    if not any((args.rename, args.sort, args.transcode, args.remove_cover)):
-        usage_exit(parser)
+    if len(args.files) < 1 or not any(required):
+        parser.print_usage()
+        exit()
 
     for file in args.files:
         s = Song(file)
@@ -79,15 +94,11 @@ def get_loglevel():
     return log.getLevelName(log.getLogger().getEffectiveLevel()).lower()
 
 
-def usage_exit(parser):
-    '''Prints the usage of the given parser, then exits.'''
-    parser.print_usage()
-    exit()
-
-
 def clean_str(s, repl_chr, trunc=None):
-    '''Removes non-alphanumeric characters from string and replaces \
-       special characters with their most common substitution.'''
+    '''
+    Removes non-alphanumeric characters from string and replaces
+    special characters with their most common substitution.
+    '''
     # substitute char with d[char]
     exclude = r'[^a-zA-Z0-9]+'
     d = {
@@ -95,7 +106,7 @@ def clean_str(s, repl_chr, trunc=None):
         '$': 'S',
         '@': 'a',
         '&': 'and'
-        }
+    }
     pattern = re.compile('|'.join(re.escape(key) for key in d.keys()))
     s = pattern.sub(lambda x: d[x.group()], s)
     # remove leading and trailing excluded characters
@@ -163,19 +174,23 @@ class Song:
             opts = ['-acodec','libmp3lame','-b:a','320k','-vn']
         else:
             raise ValueError(format)
-        output = path.with_name(path.stem + ext)
+        output = path.with_suffix(ext)
         cmd = (ffmpeg + [str(path)] + opts + [str(output)])
         subprocess.run(cmd)
 
     def remove_cover(self):
-        '''Removes embeded cover art using `ffmpeg`. Renames the\
-           original file and appends `.old` to it. Does not\
-           re-encode.'''
+        '''
+        Removes embeded cover art using `ffmpeg`. Renames the
+        original file and appends `.old` to it. Does not
+        re-encode.
+        '''
         path = self.path
         temp = path.with_name('temp.' + path.name)
         old = pathlib.Path(str(path) + '.old')
-        subprocess.run(['ffmpeg','-v',get_loglevel(),'-hide_banner',
-                        '-i',str(path),'-c:a','copy','-vn',str(temp)])
+        subprocess.run(
+            ['ffmpeg','-v',get_loglevel(),'-hide_banner',
+            '-i',str(path),'-c:a','copy','-vn',str(temp)]
+        )
         move(path, old)
         move(temp, path)
 

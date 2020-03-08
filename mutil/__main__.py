@@ -13,6 +13,7 @@ def main():
     log.basicConfig(format='%(levelname)s: %(message)s')
     parser = argparse.ArgumentParser(prog='mutil')
     parser.add_argument('files',
+        metavar='file',
         nargs='*',
         type=pathlib.Path,
         )
@@ -35,8 +36,7 @@ def main():
         help='transcode files using ffmpeg into specified format',
         nargs=1,
         type=str,)
-    parser.add_argument(
-        '--version',
+    parser.add_argument('--version',
         action='store_true',
         help='print version and exit',)
     # TODO add `--remove-cover` option
@@ -47,18 +47,11 @@ def main():
         const='INFO',
         dest='loglevel',
         help='explain what is being done',)
-    logparser.add_argument(
-        '-q', '--quiet',
+    logparser.add_argument('-q'
         action='store_const',
         const='ERROR',
         dest='loglevel',
         help='suppress warnings',)
-    logparser.add_argument(
-        '--debug',
-        action='store_const',
-        const='DEBUG',
-        dest='loglevel',
-        help='print debug messages',)
 
     args = parser.parse_args()
 
@@ -133,6 +126,7 @@ class Song:
         else: self.track = None
 
     def _format_filename(self):
+        '''Returns a filename string based on the song's metadata.'''
         ext = self.path.suffix
         s = str()
         if self.track: s += f'{self.track:02d}_'
@@ -140,11 +134,13 @@ class Song:
         return s.rstrip('_') + ext
 
     def rename(self):
+        '''Renames file to match metadata.'''
         dest = self.path.with_name(self._format_filename())
         move(self.path, dest)
         self.path = dest
 
     def sort(self, path):
+        '''Sorts file into folders within a specified directory'''
         artist = clean_str(self.artist, ' ', trunc=64).lower()
         album = clean_str(self.album, ' ', trunc=64).lower()
         dest = path.joinpath(artist, album, self.path.name)
@@ -152,6 +148,7 @@ class Song:
         self.path = dest
 
     def transcode(self, format):
+        '''Transcodes file into the specified format.'''
         path = self.path
         ffmpeg = ['ffmpeg','-v',get_loglevel(),'-hide_banner','-i']
         if format == 'opus':

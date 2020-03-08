@@ -5,7 +5,9 @@ import os
 import pathlib
 import re
 import subprocess
+
 from tinytag import TinyTag
+
 from .version import __version__
 
 

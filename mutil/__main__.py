@@ -122,6 +122,8 @@ def move(src, dest):
         raise FileNotFoundError(str(src))
     if dest.exists() and not src.samefile(dest):
         raise FileExistsError(str(dest))
+    if src == dest:
+        return
 
     dest.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
     log.info(f'mkdirs: {str(dest.parent)}')

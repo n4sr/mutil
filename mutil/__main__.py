@@ -119,7 +119,7 @@ def clean_str(s, repl_chr, trunc=None):
 def clean_tracknumber(s):
     '''
     Takes string and removes non-numeric characters. Returns an
-    integer.
+    integer. Returns None if string is empty.
     '''
     if not s: return None
     try: return int(s)

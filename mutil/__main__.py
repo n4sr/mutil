@@ -156,6 +156,7 @@ class Song:
         s = str()
         if self.track: s += f'{self.track:02d}_'
         if self.title: s += clean_str(self.title, '_', trunc=64-len(s+ext))
+        if len(s) < 1: raise ValueError(f'insufficent metadata: {self.path}')
         return s.rstrip('_') + ext
 
     def rename(self):

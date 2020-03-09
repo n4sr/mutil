@@ -116,6 +116,16 @@ def clean_str(s, repl_chr, trunc=None):
     return s
 
 
+def clean_tracknumber(s):
+    '''
+    Takes string and removes non-numeric characters. Returns an
+    integer.
+    '''
+    if not s: return None
+    try: return int(s)
+    except ValueError: return int(re.match(r'[0-9]+', s).group(0))
+
+
 def move(src, dest):
     '''Renames a file without overwriting the destination.'''
     if not src.is_file():
@@ -138,8 +148,7 @@ class Song:
         self.title = tags.title
         self.album = tags.album
         self.artist = tags.artist
-        if tags.track: self.track = int(tags.track)
-        else: self.track = None
+        self.track = clean_tracknumber(tags.track)
 
     def _format_filename(self):
         '''Returns a filename string based on the song's metadata.'''

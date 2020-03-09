@@ -134,9 +134,9 @@ def move(src, dest):
         raise FileExistsError(str(dest))
     if src == dest:
         return
-
-    dest.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
-    log.info(f'mkdirs: {str(dest.parent)}')
+    if not dest.parent.exists():
+        dest.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
+        log.info(f'mkdirs: {str(dest.parent)}')
     src.rename(dest)
     log.info(f'mv: {str(src)}  {str(dest)}')
 

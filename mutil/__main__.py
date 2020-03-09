@@ -192,19 +192,19 @@ class Song:
 
     def remove_cover(self):
         '''
-        Removes embeded cover art using `ffmpeg`. Renames the
-        original file and appends `.old` to it. Does not
-        re-encode.
+        Removes embeded cover art using `ffmpeg`. Renames the original
+        file and appends `.old` to it. Does not re-encode.
         '''
-        path = self.path
-        temp = path.with_name('temp.' + path.name)
-        old = pathlib.Path(str(path) + '.old')
-        subprocess.run(
-            ['ffmpeg','-v',get_loglevel(),'-hide_banner',
-            '-i',str(path),'-c:a','copy','-vn',str(temp)]
-        )
-        move(path, old)
-        move(temp, path)
+        temp = self.path.with_name('temp.' + self.path.name)
+        old = self.path.with_suffix(self.path.suffix + '.old')
+        subprocess.run(['ffmpeg','-v',get_loglevel(),'-hide_banner',
+                        '-i',str(self.path),'-c:a','copy','-vn',str(temp)])
+        try:
+            move(self.path, old)
+        except FileExistsError:
+            temp.unlink()
+            raise
+        move(temp, self.path)
 
 
 if __name__ == "__main__":

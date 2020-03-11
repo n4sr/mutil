@@ -38,7 +38,7 @@ def main():
     parser.add_argument(
         '--remove-cover',
         action='store_true',
-        help='removes cover art without re-encoding'
+        help='removes cover art without re-encoding',
     )
     parser.add_argument(
         '-t',
@@ -71,7 +71,7 @@ def main():
     )
 
     args = parser.parse_args()
-    required = (args.rename,args.sort,args.transcode,args.remove_cover)
+    required = (args.rename, args.sort, args.transcode, args.remove_cover)
 
     if args.loglevel:
         log.getLogger().setLevel(args.loglevel)
@@ -105,7 +105,7 @@ def clean_str(s, repl_chr, trunc=None):
         "'": '',
         '$': 'S',
         '@': 'a',
-        '&': 'and'
+        '&': 'and',
     }
     pattern = re.compile('|'.join(re.escape(key) for key in d.keys()))
     s = pattern.sub(lambda x: d[x.group()], s)

@@ -195,6 +195,7 @@ class Song:
         Removes embeded cover art using `ffmpeg`. Renames the original
         file and appends `.old` to it. Does not re-encode.
         '''
+        # TODO: use `tempfile` module instead.
         temp = self.path.with_name('temp.' + self.path.name)
         old = self.path.with_suffix(self.path.suffix + '.old')
         subprocess.run(['ffmpeg','-v',get_loglevel(),'-hide_banner',

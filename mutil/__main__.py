@@ -116,14 +116,16 @@ def clean_str(s, repl_chr, trunc=None):
     return s
 
 
-def clean_tracknumber(s):
+def parse_tracknumber(s):
     '''
     Takes string and removes non-numeric characters. Returns an
     integer. Returns None if string is empty.
     '''
-    if not s: return None
-    try: return int(s)
-    except ValueError: return int(re.match(r'[0-9]+', s).group(0))
+    if not isinstance(s, str):
+        raise TypeError(f'expects str; got {type(s).__name__}')
+    if len(s) < 1:
+        return None
+    return int(re.match(r'^[0-9]+', s).group(0))
 
 
 def move(src, dest):
@@ -148,7 +150,7 @@ class Song:
         self.title = tags.title
         self.album = tags.album
         self.artist = tags.artist
-        self.track = clean_tracknumber(tags.track)
+        self.track = parse_tracknumber(tags.track)
 
     def _format_filename(self):
         '''Returns a filename string based on the song's metadata.'''

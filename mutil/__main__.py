@@ -8,6 +8,7 @@ import subprocess
 
 from tinytag import TinyTag
 
+from .codec_options import codec_config
 from .version import __version__
 
 
@@ -42,7 +43,7 @@ def main():
     )
     parser.add_argument(
         '-t',
-        choices=('opus','mp3-320','mp3-128'),
+        choices=codec_config.keys(),
         dest='transcode',
         help='transcode files using ffmpeg into specified format',
         nargs=1,
@@ -175,28 +176,22 @@ class Song:
         move(self.path, dest)
         self.path = dest
 
-    def transcode(self, format):
-        # TODO: make format and bitrate independant.
-        # TODO: print when each file is complete to show user that work
-        # is actually being completed.
-        '''Transcodes file into the specified format.'''
-        path = self.path
-        ffmpeg = ['ffmpeg','-v',get_loglevel(),'-hide_banner','-i']
-        if format == 'opus':
-            ext = '.ogg'
-            opts = ['-acodec','libopus','-vbr','off',
-                    '-b:a','192k','-sample_fmt','s16','-vn']
-        elif format == 'mp3-320':
-            ext = '.mp3'
-            opts = ['-acodec','libmp3lame','-b:a','320k','-vn']
-        elif format == 'mp3-128':
-            ext = '.mp3'
-            opts = ['-acodec','libmp3lame','-b:a','128k','-vn']
-        else:
-            raise ValueError(format)
-        output = path.with_suffix(ext)
-        cmd = (ffmpeg + [str(path)] + opts + [str(output)])
-        subprocess.run(cmd)
+    def transcode(self, codec):
+        '''Transcodes file into the specified codec.'''
+        if codec not in codec_config.keys():
+            raise ValueError('unsupported codec: ' + codec)
+        output = self.path.with_suffix(codec_config[codec]['suffix'])
+        if output.exists():
+            raise FileExistsError(str(output))
+        print(f'transcoding: {self.path}...')
+        subprocess.run([
+            'ffmpeg',
+            '-hide_banner',
+            '-v',get_loglevel(),
+            '-i',str(self.path),
+            *codec_config[codec]['options'],
+            str(output),
+        ])
 
     def remove_cover(self):
         '''

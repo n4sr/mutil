@@ -198,14 +198,19 @@ class Song:
         Removes embeded cover art using `ffmpeg`. Renames the original
         file and appends `.old` to it. Does not re-encode.
         '''
-        # TODO: make a subdirectory for the old files instead of
-        # appending `.old` to them. It makes the user have less
-        # work of manually removing the suffix from each file
-        # if they wish to revert.
         temp = self.path.with_name('temp.' + self.path.name)
-        old = self.path.with_suffix(self.path.suffix + '.old')
-        subprocess.run(['ffmpeg','-v',get_loglevel(),'-hide_banner',
-                        '-i',str(self.path),'-c:a','copy','-vn',str(temp)])
+        old = self.path.parent.joinpath('mutil_backup~', self.path.name)
+        if not old.parent.exists():
+            old.parent.mkdir(mode=0o755)
+        subprocess.run((
+            'ffmpeg',
+            '-hide_banner',
+            '-v',get_loglevel(),
+            '-i',str(self.path),
+            '-c:a','copy',
+            '-vn',
+            str(temp)
+            ))
         try:
             move(self.path, old)
         except FileExistsError:

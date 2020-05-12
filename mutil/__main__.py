@@ -42,7 +42,7 @@ def main():
     )
     parser.add_argument(
         '-t',
-        choices=['opus', 'mp3'],
+        choices=('opus','mp3-320','mp3-128'),
         dest='transcode',
         help='transcode files using ffmpeg into specified format',
         nargs=1,
@@ -174,6 +174,9 @@ class Song:
         self.path = dest
 
     def transcode(self, format):
+        # TODO: make format and bitrate independant.
+        # TODO: print when each file is complete to show user that work
+        # is actually being completed.
         '''Transcodes file into the specified format.'''
         path = self.path
         ffmpeg = ['ffmpeg','-v',get_loglevel(),'-hide_banner','-i']
@@ -181,9 +184,12 @@ class Song:
             ext = '.ogg'
             opts = ['-acodec','libopus','-vbr','off',
                     '-b:a','192k','-sample_fmt','s16','-vn']
-        elif format == 'mp3':
+        elif format == 'mp3-320':
             ext = '.mp3'
             opts = ['-acodec','libmp3lame','-b:a','320k','-vn']
+        elif format == 'mp3-128':
+            ext = '.mp3'
+            opts = ['-acodec','libmp3lame','-b:a','128k','-vn']
         else:
             raise ValueError(format)
         output = path.with_suffix(ext)
@@ -195,7 +201,10 @@ class Song:
         Removes embeded cover art using `ffmpeg`. Renames the original
         file and appends `.old` to it. Does not re-encode.
         '''
-        # TODO: use `tempfile` module instead.
+        # TODO: make a subdirectory for the old files instead of
+        # appending `.old` to them. It makes the user have less
+        # work of manually removing the suffix from each file
+        # if they wish to revert.
         temp = self.path.with_name('temp.' + self.path.name)
         old = self.path.with_suffix(self.path.suffix + '.old')
         subprocess.run(['ffmpeg','-v',get_loglevel(),'-hide_banner',

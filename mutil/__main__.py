@@ -86,7 +86,7 @@ def main():
     for file in args.files:
         s = Song(file)
         if args.sort: s.sort(args.sort[0])
-        if args.rename: s.rename()
+        if args.rename: s.rename(s.format_filename())
         if args.remove_cover: s.remove_cover()
         if args.transcode: s.transcode(args.transcode[0])
 
@@ -128,21 +128,6 @@ def parse_tracknumber(s):
     return int(re.match(r'^[0-9]+', s).group(0))
 
 
-def move(src, dest):
-    '''Renames a file without overwriting the destination.'''
-    if not src.is_file():
-        raise FileNotFoundError(str(src))
-    if dest.exists() and not src.samefile(dest):
-        raise FileExistsError(str(dest))
-    if src == dest:
-        return
-    if not dest.parent.exists():
-        dest.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
-        log.info(f'mkdirs: {str(dest.parent)}')
-    src.rename(dest)
-    log.info(f'mv: {str(src)}  {str(dest)}')
-
-
 class Song:
     def __init__(self, path):
         tags = TinyTag.get(path, duration=False)
@@ -152,19 +137,26 @@ class Song:
         self.artist = tags.artist
         self.track = parse_tracknumber(tags.track)
 
-    def _format_filename(self):
+    def format_filename(self):
         '''Returns a filename string based on the song's metadata.'''
-        ext = self.path.suffix
         s = str()
         if self.track: s += f'{self.track:02d}_'
-        if self.title: s += clean_string(self.title, trim=64-len(s+ext))
+        if self.title: s += clean_string(self.title,
+                                         trim=64-len(s+self.path.suffix))
         if len(s) < 1: raise ValueError(f'insufficent metadata: {self.path}')
-        return s.rstrip('_') + ext
+        return self.path.with_name(s.rstrip('_') + self.path.suffix)
 
-    def rename(self):
+    def rename(self, dest):
         '''Renames file to match metadata.'''
-        dest = self.path.with_name(self._format_filename())
-        move(self.path, dest)
+        if not self.path.is_file():
+            raise FileNotFoundError(str(self.path))
+        if dest.exists() and not self.path.samefile(dest):
+            raise FileExistsError(str(dest))
+        if self.path == dest:
+            return
+        if not dest.parent.exists():
+            dest.parent.mkdir(exist_ok=True, parents=True, mode=0o755)
+        self.path.rename(dest)
         self.path = dest
 
     def sort(self, path):
@@ -172,8 +164,7 @@ class Song:
         artist = clean_string(self.artist, trim=64).lower()
         album = clean_string(self.album, trim=64).lower()
         dest = path.joinpath(artist, album, self.path.name)
-        move(self.path, dest)
-        self.path = dest
+        self.rename(dest)
 
     def transcode(self, codec):
         '''Transcodes file into the specified codec.'''

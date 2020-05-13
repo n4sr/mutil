@@ -95,26 +95,25 @@ def get_loglevel():
     return log.getLevelName(log.getLogger().getEffectiveLevel()).lower()
 
 
-def clean_str(s, repl_chr, trunc=None):
+def clean_string(string, trim=None):
     '''
-    Removes non-alphanumeric characters from string and replaces
-    special characters with their most common substitution.
+    Replaces non-alphanumeric characters in string with
+    underscores and other common substitutions.
     '''
-    # substitute char with d[char]
     exclude = r'[^a-zA-Z0-9]+'
-    d = {
+    substitutions = {
         "'": '',
         '$': 'S',
         '@': 'a',
         '&': 'and',
     }
-    pattern = re.compile('|'.join(re.escape(key) for key in d.keys()))
-    s = pattern.sub(lambda x: d[x.group()], s)
-    # remove leading and trailing excluded characters
-    s = re.sub(fr'^{exclude}|{exclude}$', '', s)
-    s = re.sub(fr'{exclude}', repl_chr, s)
-    if trunc: s = s[:trunc]
-    return s
+    pattern = '|'.join(re.escape(key) for key in substitutions.keys())
+    pattern = re.compile(pattern)
+    string = pattern.sub(lambda x: substitutions[x.group()], string)
+    string = re.sub(fr'^{exclude}|{exclude}$', '', string)
+    string = re.sub(fr'{exclude}', '_', string)
+    if trim: string = string[:trim]
+    return string
 
 
 def parse_tracknumber(s):
@@ -158,7 +157,7 @@ class Song:
         ext = self.path.suffix
         s = str()
         if self.track: s += f'{self.track:02d}_'
-        if self.title: s += clean_str(self.title, '_', trunc=64-len(s+ext))
+        if self.title: s += clean_string(self.title, trim=64-len(s+ext))
         if len(s) < 1: raise ValueError(f'insufficent metadata: {self.path}')
         return s.rstrip('_') + ext
 
@@ -170,8 +169,8 @@ class Song:
 
     def sort(self, path):
         '''Sorts file into folders within a specified directory'''
-        artist = clean_str(self.artist, ' ', trunc=64).lower()
-        album = clean_str(self.album, ' ', trunc=64).lower()
+        artist = clean_string(self.artist, trim=64).lower()
+        album = clean_string(self.album, trim=64).lower()
         dest = path.joinpath(artist, album, self.path.name)
         move(self.path, dest)
         self.path = dest

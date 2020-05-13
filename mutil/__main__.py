@@ -33,7 +33,6 @@ def main():
         dest='sort',
         help='sorts music into folders within a directory',
         metavar='directory',
-        nargs=1,
         type=pathlib.Path,
     )
     parser.add_argument(
@@ -46,7 +45,6 @@ def main():
         choices=codec_config.keys(),
         dest='transcode',
         help='transcode files using ffmpeg into specified format',
-        nargs=1,
         type=str,
     )
     parser.add_argument(
@@ -85,10 +83,10 @@ def main():
 
     for file in args.files:
         s = Song(file)
-        if args.sort: s.sort(args.sort[0])
+        if args.sort: s.sort(args.sort)
         if args.rename: s.rename(s.format_filename())
         if args.remove_cover: s.remove_cover()
-        if args.transcode: s.transcode(args.transcode[0])
+        if args.transcode: s.transcode(args.transcode)
 
 
 def get_loglevel():

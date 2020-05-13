@@ -200,11 +200,11 @@ class Song:
             str(temp)
             ))
         try:
-            move(self.path, old)
+            self.path.rename(old)
         except FileExistsError:
             temp.unlink()
             raise
-        move(temp, self.path)
+        temp.rename(self.path)
 
 
 if __name__ == "__main__":

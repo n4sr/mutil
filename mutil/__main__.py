@@ -116,8 +116,8 @@ def clean_string(string, trim=None):
 
 def parse_tracknumber(s):
     '''
-    Takes string and removes non-numeric characters. Returns an
-    integer. Returns None if string is empty.
+    Parses tracknumber string and returns int. Returns None if string
+    is empty.
     '''
     if not isinstance(s, str):
         raise TypeError(f'expects str; got {type(s).__name__}')
@@ -136,7 +136,9 @@ class Song:
         self.track = parse_tracknumber(tags.track)
 
     def format_filename(self):
-        '''Returns a filename string based on the song's metadata.'''
+        '''
+        Returns a renamed path object based on the song's metadata.
+        '''
         s = str()
         if self.track: s += f'{self.track:02d}_'
         if self.title: s += clean_string(self.title,
@@ -145,9 +147,6 @@ class Song:
         return self.path.with_name(s.rstrip('_') + self.path.suffix)
 
     def rename(self, dest):
-        '''Renames file to match metadata.'''
-        if not self.path.is_file():
-            raise FileNotFoundError(str(self.path))
         if dest.exists() and not self.path.samefile(dest):
             raise FileExistsError(str(dest))
         if self.path == dest:
@@ -158,7 +157,10 @@ class Song:
         self.path = dest
 
     def sort(self, path):
-        '''Sorts file into folders within a specified directory'''
+        '''
+        Creates artist/album directories within `path` and then
+        moves self into the album directory.
+        '''
         artist = clean_string(self.artist, trim=64).lower()
         album = clean_string(self.album, trim=64).lower()
         dest = path.joinpath(artist, album, self.path.name)
@@ -183,11 +185,11 @@ class Song:
 
     def remove_cover(self):
         '''
-        Removes embeded cover art using `ffmpeg`. Renames the original
-        file and appends `.old` to it. Does not re-encode.
+        Removes embeded cover art using ffmpeg without transcoding.
+        Backs up the original into a subdirectory called `mutil~`.
         '''
         temp = self.path.with_name('temp.' + self.path.name)
-        old = self.path.parent.joinpath('mutil_backup~', self.path.name)
+        old = self.path.parent.joinpath('mutil~', self.path.name)
         if not old.parent.exists():
             old.parent.mkdir(mode=0o755)
         subprocess.run((
